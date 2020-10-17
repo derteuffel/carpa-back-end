@@ -1,6 +1,9 @@
 package com.derteuffel.helpers;
 
+import com.derteuffel.entities.Role;
+
 import java.util.Date;
+import java.util.List;
 
 public class RegisterPayload {
 
@@ -11,18 +14,39 @@ public class RegisterPayload {
     private String fonction;
     private String matricule;
     private Date dateNaissance;
+    private String username;
+    private List<String> roles;
 
     public RegisterPayload() {
     }
 
-    public RegisterPayload(String email, String password, String fullname, Boolean enabled, String fonction, String matricule, Date dateNaissance) {
+    public RegisterPayload(String email, String password, String fullname, String username, Boolean enabled,
+                           String fonction, String matricule, Date dateNaissance) {
         this.email = email;
         this.password = password;
         this.fullname = fullname;
+        this.username = username;
         this.enabled = enabled;
         this.fonction = fonction;
         this.matricule = matricule;
         this.dateNaissance = dateNaissance;
+
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 
     public String getEmail() {

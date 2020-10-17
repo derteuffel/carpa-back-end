@@ -1,12 +1,16 @@
 package com.derteuffel.controllers;
 
 import com.derteuffel.entities.Courrier;
+import com.derteuffel.entities.ERole;
 import com.derteuffel.entities.Role;
 import com.derteuffel.entities.User;
+import com.derteuffel.helpers.RegisterPayload;
 import com.derteuffel.repositories.CourrierRepository;
 import com.derteuffel.repositories.RoleRepository;
 import com.derteuffel.repositories.UserRepository;
+import com.derteuffel.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
@@ -14,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -24,11 +28,15 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+
+    @Autowired
+    private CourrierRepository courrierRepository;
+
     @Autowired
     private RoleRepository roleRepository;
 
     @Autowired
-    private CourrierRepository courrierRepository;
+    private UserService userService;
 
     @GetMapping("")
     public Iterable<User> getAllUsers(){
@@ -40,19 +48,21 @@ public class UserController {
         return userRepository.getOne(id);
     }
 
-    @GetMapping("/roles/{name}/{id}")
-    public ResponseEntity changeRole(@PathVariable Long id, @PathVariable String name){
+
+    @GetMapping("/roles/{id}")
+    public ResponseEntity changeRole(@PathVariable Long id, ERole role){
         User user = userRepository.getOne(id);
+        Optional<Role> role1 = roleRepository.findByName(role);
         if (user != null) {
-            Role role = roleRepository.findByName(name);
             user.getRoles().clear();
-            if (role!= null) {
-                user.getRoles().add(role);
+            if (role1.get() != null){
+
+                user.getRoles().add(role1.get());
             }else {
-                Role role1 = new Role();
-                role1.setName(name);
-                roleRepository.save(role1);
-                user.getRoles().add(role1);
+                Role role2 = new Role();
+                role2.setName(role);
+                roleRepository.save(role2);
+                user.getRoles().add(role2);
             }
             userRepository.save(user);
         }else {

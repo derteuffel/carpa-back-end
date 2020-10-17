@@ -2,26 +2,23 @@ package com.derteuffel.entities;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 
-@Data
+
 @Entity
+@Data
 @Table(name = "roles")
-public class Role implements Serializable {
+public class   Role {
 
     @Id
     @GeneratedValue
     private Long id;
-    private String name;
 
-    public Role() {
-    }
+    @Enumerated(EnumType.STRING)
+    private ERole name;
 
-    public Role(String name) {
+    public Role(ERole name) {
         this.name = name;
     }
 
@@ -33,11 +30,15 @@ public class Role implements Serializable {
         this.id = id;
     }
 
-    public String getName() {
+    public ERole getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(ERole name) {
         this.name = name;
+    }
+
+    public Role() {
+
     }
 }

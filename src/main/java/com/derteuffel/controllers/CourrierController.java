@@ -9,6 +9,7 @@ import com.derteuffel.repositories.UserRepository;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,21 +36,6 @@ public class CourrierController {
     }
 
 
-    @GetMapping("/added-at/{date}")
-    public List<Courrier> findAllByAddedDate(@PathVariable String date){
-        return courrierRepository.findAllByAddedDate(date);
-    }
-
-    @GetMapping("/receive-at/{date}")
-    public List<Courrier> findAllByReceiverDate(@PathVariable String date){
-        return courrierRepository.findAllByReceiverDate(date);
-    }
-
-
-    @GetMapping("/sending-at/{date}")
-    public List<Courrier> findAllBySenderDate(@PathVariable String date){
-        return courrierRepository.findAllBySenderDate(date);
-    }
 
     @GetMapping("/type/{type}")
     public List<Courrier> findAllByTypeCourrier(@PathVariable String type){
@@ -80,8 +66,8 @@ public class CourrierController {
     @GetMapping("/users")
     public List<Courrier> findAllByUsers(HttpServletRequest request){
         Principal principal = request.getUserPrincipal();
-        User user = userRepository.findByEmail(principal.getName());
-        return courrierRepository.findAllByUsers_Id(user.getId());
+       Optional<User> user = userRepository.findByEmail(principal.getName());
+        return courrierRepository.findAllByUsers_Id(user.get().getId());
     }
 
     @GetMapping("/status/{status}")
@@ -92,9 +78,10 @@ public class CourrierController {
 
 
     @PostMapping("/save")
+    @PreAuthorize("hasRole('USER') or hasRole('SECRETAIRE') or hasRole('ROOT')")
     public ResponseEntity saveCourrier(@RequestBody CourrierHelper courrierHelper, HttpServletRequest request){
         Principal principal = request.getUserPrincipal();
-        User existUser = userRepository.findByEmail(principal.getName());
+        Optional<User> existUser = userRepository.findByEmail(principal.getName());
         System.out.println("je suis la!!!");
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm");
         if (existUser != null){
@@ -108,8 +95,8 @@ public class CourrierController {
             courrier.setReferenceNumber(courrierHelper.getReferenceNumber());
             courrier.setTypeCourrier(courrierHelper.getTypeCourrier());
             courrier.setAddedDate(sdf.format(new Date()));
-            courrier.setSaver(existUser.getFullname());
-            courrier.setUsers(Arrays.asList(existUser));
+            courrier.setSaver(existUser.get().getFullname());
+            courrier.setUsers(Arrays.asList(existUser.get()));
             courrier.setStatus(true);
 
             courrierRepository.save(courrier);
@@ -122,6 +109,7 @@ public class CourrierController {
     }
 
     @PostMapping("/update/{id}")
+    @PreAuthorize("hasRole('USER') or hasRole('SECRETAIRE') or hasRole('ROOT')")
     public ResponseEntity updateCourrier(@RequestBody CourrierHelper courrierHelper, @PathVariable Long id){
         System.out.println("Je suis dedans ici");
         Courrier courrier = courrierRepository.getOne(id);
@@ -142,16 +130,17 @@ public class CourrierController {
     }
 
     @PostMapping("/users/add/{id}")
+    @PreAuthorize("hasRole('COORDONATEUR') or hasRole('ROOT') or hasRole('EXPERT')")
     public ResponseEntity addUserToCourrier(@RequestBody ArrayList<String> utilisateurs, @PathVariable Long id){
         System.out.println(utilisateurs);
         Courrier courrier = courrierRepository.getOne(id);
 
             for (String email : utilisateurs){
-                User existUser = userRepository.findByEmail(email);
+                Optional<User> existUser = userRepository.findByEmail(email);
                 if (!(courrier.getUsers().contains(existUser))){
-                    courrier.getUsers().add(existUser);
+                    courrier.getUsers().add(existUser.get());
                 }else {
-                    throw new BadCredentialsException("User with email: " + existUser.getEmail() + " Already exist");
+                    throw new BadCredentialsException("User with email: " + existUser.get().getEmail() + " Already exist");
                 }
                 courrierRepository.save(courrier);
             }

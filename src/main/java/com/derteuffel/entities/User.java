@@ -2,16 +2,21 @@ package com.derteuffel.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
 import org.thymeleaf.expression.Lists;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 @Data
 @Entity
-@Table(name = "users")
+@Table(name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "email")
+        })
 public class User implements Serializable {
 
 
@@ -22,18 +27,20 @@ public class User implements Serializable {
     private String email;
     private String password;
     private String fullname;
+    private String username;
     private Boolean enabled;
     private String fonction;
     private String matricule;
     private String dateNaissance;
+    @Transient
+    private String token;
 
 
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(	name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles;
+    @ManyToMany(fetch=FetchType.LAZY)
+    @JoinTable(name = "user_roles",
+    joinColumns = @JoinColumn(name = "user_id"),
+    inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Collection<Role> roles;
 
     @ManyToMany(mappedBy = "users")
     @JsonIgnore
@@ -42,7 +49,8 @@ public class User implements Serializable {
     public User() {
     }
 
-    public User(String email, String password, String fullname, Boolean enabled, String fonction, String matricule, String dateNaissance) {
+    public User(String email, String password, String fullname, String username, Boolean enabled,
+                String fonction, String matricule, String dateNaissance, String token) {
         this.email = email;
         this.password = password;
         this.fullname = fullname;
@@ -50,8 +58,37 @@ public class User implements Serializable {
         this.fonction = fonction;
         this.matricule = matricule;
         this.dateNaissance = dateNaissance;
+        this.token = token;
+        this.username = username;
     }
 
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public User(String email, String password, Collection<GrantedAuthority> authorities) {
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public Collection<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Collection<Role> roles) {
+        this.roles = roles;
+    }
 
     public List<Courrier> getCourriers() {
         return courriers;
@@ -125,11 +162,4 @@ public class User implements Serializable {
         this.dateNaissance = dateNaissance;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
 }
